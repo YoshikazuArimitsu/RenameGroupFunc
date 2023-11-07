@@ -1,5 +1,7 @@
+import "isomorphic-fetch";
 import {
   app,
+  Exception,
   HttpRequest,
   HttpResponseInit,
   InvocationContext,
@@ -8,11 +10,8 @@ import { Client } from "@microsoft/microsoft-graph-client";
 import { loginWithServicePrincipalSecret } from "@azure/ms-rest-nodeauth";
 
 async function getGraphClient() {
-  // サービスプリンシパルのアプリケーションID
   const clientId = process.env.AZURE_CLIENT_ID;
-  // サービスプリンシパルのシークレット
   const clientSecret = process.env.AZURE_CLIENT_SECRET;
-  // Azure ADのテナントID
   const tenantId = process.env.AZURE_TENANT_ID;
 
   const applicationTokenCredentials = await loginWithServicePrincipalSecret(
@@ -42,9 +41,24 @@ export async function httpTrigger(
 ): Promise<HttpResponseInit> {
   context.log(`Http function processed request for url "${request.url}"`);
 
-  const name = request.query.get("name") || (await request.text()) || "world";
+  const groupId = request.query.get("groupId");
+  const name = request.query.get("name");
 
-  return { body: `Hello, ${name}!` };
+  if (!groupId || !name) {
+    return { status: 400, body: "BadRequest" };
+  }
+
+  // https://learn.microsoft.com/en-us/graph/api/group-update?view=graph-rest-1.0&tabs=http
+  const graphClient = await getGraphClient();
+
+  try {
+    await graphClient.api(`/groups/${groupId}`).update({
+      displayName: name,
+    });
+    return { status: 200, body: "OK" };
+  } catch (e: any) {
+    return { status: 500, body: e };
+  }
 }
 
 app.http("httpTrigger", {

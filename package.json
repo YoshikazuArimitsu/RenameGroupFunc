@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "rename_group_func",
   "version": "1.0.0",
   "description": "",
   "main": "dist/src/functions/*.js",
@@ -14,7 +14,8 @@
   "dependencies": {
     "@azure/functions": "^4.0.0-alpha.9",
     "@azure/ms-rest-nodeauth": "^3.1.1",
-    "@microsoft/microsoft-graph-client": "^3.0.7"
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "isomorphic-fetch": "^3.0.0"
   },
   "devDependencies": {
     "@types/node": "18.x",
