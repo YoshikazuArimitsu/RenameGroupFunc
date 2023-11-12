@@ -15,9 +15,8 @@ data "azurerm_subscription" "current" {}
 data "azuread_application_published_app_ids" "well_known" {}
 
 # AzureAD Application
-resource "azuread_service_principal" "msgraph" {
-  application_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
-  use_existing   = true
+data "azuread_service_principal" "microsoft_graph" {
+  client_id = "00000003-0000-0000-c000-000000000000"
 }
 
 resource "azuread_application" "app" {
@@ -26,14 +25,14 @@ resource "azuread_application" "app" {
   owners           = [data.azurerm_client_config.current.object_id]
 
   required_resource_access {
-    # Microsoft Graph
-    resource_app_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
+    resource_app_id = data.azuread_service_principal.microsoft_graph.client_id
 
     resource_access {
-      id   = azuread_service_principal.msgraph.app_role_ids["Group.ReadWrite.All"]
-      type = "Scope"
+      id   = [for x in data.azuread_service_principal.microsoft_graph.app_roles : x.id if x.value == "Group.ReadWrite.All"][0]
+      type = "Role"
     }
   }
+
 }
 
 resource "azuread_application_password" "app" {
